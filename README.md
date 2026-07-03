@@ -154,7 +154,6 @@ Each control in `policies.py` references the exact CIS recommendation ID (e.g., 
 ## 👤 Author
 
 **Niranjan Krishnarajarajan**
-OT Security Intern — WinCIS-Secure
 B.Tech Computer Science, NIT Rourkela (2nd Year)
 
 ---
@@ -165,4 +164,4 @@ This tool modifies Windows Registry and Group Policy settings. Always test in a 
 
 ---
 
-*CIS Windows 11 Benchmark v5.0.0 · System Engine v1.0.0 · © 2026 Niranjan Krishnarajarajan*
+*CIS Windows 11 Benchmark v5.0.0 · © 2026 Niranjan Krishnarajarajan*
