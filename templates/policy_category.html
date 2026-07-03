@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ section.title }} · CIS Windows 11 Hardening · WinCIS-Secure</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='ra-favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app-layout">
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-logo" aria-hidden="true">
+        <img src="{{ url_for('static', filename='win-cis.png') }}" alt="WinCIS-Secure logo">
+      </div>
+      <div>
+        <div class="brand-name">WinCIS-Secure</div>
+        <div class="brand-sub">CIS Windows 11 Hardening · Benchmark v5.0.0</div>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="status-chip {{ 'compliant' if failed == 0 else 'warning' }}">
+        <span class="dot"></span>
+        {{ "Compliant" if failed == 0 else "Action Required" }}
+      </div>
+      <form action="{{ url_for('logout') }}" method="post">
+        <button class="btn btn-ghost btn-sm" type="submit">Sign out</button>
+      </form>
+    </div>
+  </header>
+
+  <aside class="app-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <a class="sidebar-link" href="{{ url_for('dashboard') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Overview
+      </a>
+      {% for nav in sections %}
+      <a class="sidebar-link {{ 'active' if nav.key == section.key else '' }}" href="{{ url_for('policy_category', category=nav.key) }}">
+        {% if nav.key == 'password' %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+        {% elif nav.key == 'lockout' %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+        </svg>
+        {% elif nav.key == 'local_policy' %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M16 11h6"/>
+        </svg>
+        {% elif nav.key == 'services' %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.7 6.3a4 4 0 00-5.66 5.66l-4.24 4.24a2 2 0 102.83 2.83l4.24-4.24a4 4 0 005.66-5.66l-2.12 2.12-2.83-2.83 2.12-2.12z"/>
+        </svg>
+        {% else %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
+        </svg>
+        {% endif %}
+        {{ nav.title }}
+      </a>
+      {% endfor %}
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Audit</div>
+      <a class="sidebar-link" href="{{ url_for('logs') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Activity Log
+      </a>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="user-avatar" aria-hidden="true">{{ username[:1]|upper }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ username }}</div>
+          <div class="user-role">{{ role }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="toast-stack" aria-live="polite">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="toast toast-{{ category }}" role="alert">
+            <span class="toast-icon" aria-hidden="true">{% if category == 'success' %}✓{% elif category == 'error' %}✕{% else %}⚠{% endif %}</span>
+            <span class="toast-body">{{ message }}</span>
+            <button class="toast-close" aria-label="Dismiss">×</button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{{ section.title }}</h1>
+        <p class="page-subtitle">{{ section.results|length }} controls · last scan {{ scan_time }}</p>
+      </div>
+      <div class="page-actions">
+        {% if can_modify %}
+        <form action="{{ url_for('apply_all', category=section.key) }}" method="post" class="operation-form">
+          <button class="btn btn-primary" type="submit">
+            <span class="btn-label">Apply All {{ section.title }}</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </form>
+        <form action="{{ url_for('reset_category', category=section.key) }}" method="post" class="operation-form">
+          <button class="btn btn-danger" type="submit" data-confirm="Reset all {{ section.title }} controls to their original default values?">
+            <span class="btn-label">Reset All {{ section.title }}</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <section class="policy-section" id="sec-{{ section.key }}">
+      <form action="{{ url_for('apply_selected') }}" method="post" class="operation-form">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><span class="sr-only">Select</span></th>
+                <th>Status</th>
+                <th>Control</th>
+                <th>Policy</th>
+                <th>CIS Target</th>
+                <th>Current</th>
+                {% if can_modify %}<th>Actions</th>{% endif %}
+              </tr>
+            </thead>
+            <tbody>
+            {% for result in section.results %}
+              <tr class="policy-row row-{{ result.status|lower }}"
+                  {% if can_modify and (result.editable is not defined or result.editable) %}
+                  data-modal="edit-{{ result.cis_id|replace('.', '-') }}"
+                  tabindex="0"
+                  role="button"
+                  aria-label="Edit {{ result.name }}"
+                  {% endif %}>
+                <td>
+                  {% if can_modify %}
+                  <input class="policy-check" type="checkbox" name="policies" value="{{ result.cis_id }}" aria-label="Select {{ result.name }}">
+                  {% else %}
+                  <span class="readonly-mark">-</span>
+                  {% endif %}
+                </td>
+                <td><span class="badge badge-{{ result.status|lower }}">{{ result.status }}</span></td>
+                <td><span class="cell-id">{{ result.cis_id }}</span></td>
+                <td class="cell-policy"><strong>{{ result.name }}</strong></td>
+                <td class="cell-req">{{ result.required }}{% if result.unit is defined %}{{ result.unit }}{% endif %}</td>
+                <td>
+                  <span class="cell-value">
+                    {{ result.current }}
+                    {% if result.configured_value != result.required_raw %}
+                    <span class="custom-tag">custom: {{ result.configured }}</span>
+                    {% endif %}
+                  </span>
+                </td>
+                {% if can_modify %}
+                <td>
+                  <div class="row-actions">
+                    {% if result.editable is not defined or result.editable %}
+                    <button class="btn btn-secondary btn-sm edit-btn" type="button" data-modal="edit-{{ result.cis_id|replace('.', '-') }}">Edit</button>
+                    {% endif %}
+                    <button class="btn btn-ghost btn-sm" type="submit" form="reset-{{ result.cis_id|replace('.', '-') }}" data-confirm="Reset '{{ result.name }}' to its original default value?">Reset</button>
+                  </div>
+                </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if can_modify %}
+        <div class="section-foot">
+          <span class="section-foot-note">Check one or more controls to apply them together.</span>
+          <button class="btn btn-primary btn-sm" type="submit">
+            <span class="btn-label">Apply Selected</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+        {% endif %}
+      </form>
+    </section>
+
+    {% if can_modify %}
+    {% for result in section.results %}
+    <form id="reset-{{ result.cis_id|replace('.', '-') }}" action="{{ url_for('reset_control', cis_id=result.cis_id) }}" method="post" class="operation-form" style="display:none"></form>
+
+    {% if result.editable is not defined or result.editable %}
+    <dialog id="edit-{{ result.cis_id|replace('.', '-') }}" class="edit-dialog edit-drawer">
+      <form action="{{ url_for('customize_control', cis_id=result.cis_id) }}" method="post" class="operation-form">
+        <div class="dialog-header">
+          <div class="dialog-icon-wrap edit" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="dialog-title">{{ result.name }}</div>
+            <div class="dialog-sub">CIS Control {{ result.cis_id }}</div>
+          </div>
+        </div>
+
+        <p class="dialog-body">
+          Set a custom compliance target for this control. Valid range:
+          <strong>{{ result.input_min }}-{{ result.input_max }}</strong>.
+          The value is applied immediately to the system.
+        </p>
+
+        <label for="val-{{ result.cis_id|replace('.', '-') }}">Configuration value</label>
+        {% if result.is_boolean %}
+          <select id="val-{{ result.cis_id|replace('.', '-') }}" name="value" required>
+            <option value="1" {% if result.configured_value == 1 %}selected{% endif %}>1 - {{ result.input_options.get(1, 'Enabled') }}</option>
+            <option value="0" {% if result.configured_value == 0 %}selected{% endif %}>0 - {{ result.input_options.get(0, 'Disabled') }}</option>
+          </select>
+        {% else %}
+          <input id="val-{{ result.cis_id|replace('.', '-') }}" name="value" type="number" value="{{ result.configured_value }}" min="{{ result.input_min }}" max="{{ result.input_max }}" required>
+          <p class="edit-range-note">Accepted range: {{ result.input_min }} to {{ result.input_max }}</p>
+        {% endif %}
+
+        <div class="dialog-actions">
+          <button class="btn btn-secondary close-dialog-btn" type="button">Cancel</button>
+          <button class="btn btn-primary" type="submit">
+            <span class="btn-label">Save &amp; Apply</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+
+    <footer class="app-footer">
+      <span>WinCIS-Secure · Connected Enterprise Security</span>
+      <span>CIS Windows 11 Benchmark v5.0.0</span>
+      <span>System Engine v1.0.0 | Engineered by Niranjan Krishnarajarajan | Copyright © 2026</span>
+    </footer>
+  </main>
+</div>
+
+<dialog class="confirm-dialog" id="confirm-dialog">
+  <div class="dialog-header">
+    <div class="dialog-icon-wrap danger" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div>
+      <div class="dialog-title" id="confirm-title">Confirm action</div>
+      <div class="dialog-sub">This operation will modify system security policy</div>
+    </div>
+  </div>
+  <p class="dialog-body" id="confirm-body"></p>
+  <div class="dialog-actions">
+    <button class="btn btn-secondary" id="confirm-cancel">Cancel</button>
+    <button class="btn btn-danger" id="confirm-ok">Confirm</button>
+  </div>
+</dialog>
+
+<div class="loading-overlay" aria-hidden="true" id="loading-overlay">
+  <div class="loading-ring"></div>
+  <span class="loading-text" id="loading-text">Applying security configuration...</span>
+</div>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

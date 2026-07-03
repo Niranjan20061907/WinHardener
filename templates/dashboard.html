@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CIS Windows 11 Hardening · WinCIS-Secure</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='ra-favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app-layout">
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-logo" aria-hidden="true">
+        <img src="{{ url_for('static', filename='win-cis.png') }}" alt="WinCIS-Secure logo">
+      </div>
+      <div>
+        <div class="brand-name">WinCIS-Secure</div>
+        <div class="brand-sub">CIS Windows 11 Hardening · Benchmark v5.0.0</div>
+      </div>
+    </div>
+
+    <div class="header-status">
+      <div class="status-chip {{ 'compliant' if failed == 0 else 'warning' }}">
+        <span class="dot"></span>
+        {{ "Compliant" if failed == 0 else "Action Required" }}
+      </div>
+      <div class="header-sep" aria-hidden="true"></div>
+      <div class="header-meta">Last scan&nbsp;<strong>{{ scan_time }}</strong></div>
+      <div class="header-sep" aria-hidden="true"></div>
+      <form action="{{ url_for('logout') }}" method="post">
+        <button class="btn btn-ghost btn-sm" type="submit">Sign out</button>
+      </form>
+    </div>
+  </header>
+
+  <aside class="app-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <a class="sidebar-link active" href="{{ url_for('dashboard') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Overview
+      </a>
+      <a class="sidebar-link" href="{{ url_for('policy_category', category='password') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+        Password Policies
+      </a>
+      <a class="sidebar-link" href="{{ url_for('policy_category', category='lockout') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+        </svg>
+        Account Lockout Policies
+      </a>
+      <a class="sidebar-link" href="{{ url_for('policy_category', category='local_policy') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M16 11h6"/>
+        </svg>
+        Local Policy
+      </a>
+      <a class="sidebar-link" href="{{ url_for('policy_category', category='services') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.7 6.3a4 4 0 00-5.66 5.66l-4.24 4.24a2 2 0 102.83 2.83l4.24-4.24a4 4 0 005.66-5.66l-2.12 2.12-2.83-2.83 2.12-2.12z"/>
+        </svg>
+        System Services
+      </a>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Audit</div>
+      <a class="sidebar-link" href="{{ url_for('logs') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Activity Log
+      </a>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="user-avatar" aria-hidden="true">{{ username[:1]|upper }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ username }}</div>
+          <div class="user-role">{{ role }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="toast-stack" aria-live="polite">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="toast toast-{{ category }}" role="alert">
+            <span class="toast-icon" aria-hidden="true">{% if category == 'success' %}✓{% elif category == 'error' %}✕{% else %}⚠{% endif %}</span>
+            <span class="toast-body">{{ message }}</span>
+            <button class="toast-close" aria-label="Dismiss">×</button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+
+    <section class="dashboard-hero">
+      <div>
+        <h1 class="page-title">System Hardening Dashboard</h1>
+        <p class="page-subtitle">Hardening standalone systems to secure the operational perimeter.</p>
+      </div>
+      <div class="page-actions master-actions">
+        <a class="btn btn-secondary btn-master" href="{{ url_for('export_pdf') }}">
+          Export PDF Report
+        </a>
+        {% if can_modify %}
+        <form action="{{ url_for('apply_all_everything') }}" method="post" class="operation-form">
+          <button class="btn btn-primary btn-master" type="submit">
+            <span class="btn-label">Apply All</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </form>
+        <form action="{{ url_for('reset_all') }}" method="post" class="operation-form">
+          <button class="btn btn-danger btn-master" type="submit" data-confirm="Reset all policies to their original default values? This cannot be undone.">
+            <span class="btn-label">Reset All</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </section>
+
+    <div class="summary-row">
+      <div class="gauge-card">
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="gauge-track" cx="60" cy="60" r="50"/>
+            <circle class="gauge-fill {% if score < 50 %}danger{% elif score < 80 %}warning{% endif %}" cx="60" cy="60" r="50" data-score="{{ score }}"/>
+          </svg>
+          <div class="gauge-center">
+            <span class="gauge-pct">{{ "%.0f"|format(score) }}%</span>
+            <span class="gauge-label">Score</span>
+          </div>
+        </div>
+        <span class="gauge-title">Compliance</span>
+      </div>
+      <div class="metric-card pass">
+        <span class="metric-eyebrow">Passed</span>
+        <span class="metric-value">{{ passed }}</span>
+        <span class="metric-desc">Controls meeting the CIS baseline</span>
+      </div>
+      <div class="metric-card fail">
+        <span class="metric-eyebrow">Failed</span>
+        <span class="metric-value">{{ failed }}</span>
+        <span class="metric-desc">Controls requiring remediation</span>
+      </div>
+      <div class="metric-card total">
+        <span class="metric-eyebrow">Total</span>
+        <span class="metric-value">{{ total }}</span>
+        <span class="metric-desc">Windows security checks audited</span>
+      </div>
+    </div>
+
+    <div class="category-grid">
+      {% for section in sections %}
+      {% set section_passed = section.results|selectattr('status', 'equalto', 'PASS')|list|length %}
+      {% set section_failed = section.results|selectattr('status', 'equalto', 'FAIL')|list|length %}
+      {% set section_errors = section.results|selectattr('status', 'equalto', 'ERROR')|list|length %}
+      {% set section_score = (section_passed / section.results|length * 100) if section.results else 0 %}
+      <section class="category-card {{ 'needs-work' if section_failed or section_errors else 'healthy' }}">
+        <div class="section-head category-card-head">
+          <div class="section-head-left">
+            <div class="section-icon" aria-hidden="true">
+              {% if section.key == 'password' %}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+              {% elif section.key == 'lockout' %}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+              </svg>
+              {% elif section.key == 'local_policy' %}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M16 11h6"/>
+              </svg>
+              {% elif section.key == 'services' %}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a4 4 0 00-5.66 5.66l-4.24 4.24a2 2 0 102.83 2.83l4.24-4.24a4 4 0 005.66-5.66l-2.12 2.12-2.83-2.83 2.12-2.12z"/>
+              </svg>
+              {% else %}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
+              </svg>
+              {% endif %}
+            </div>
+            <div>
+              <div class="section-name">{{ section.title }}</div>
+              <div class="section-count">{{ section.results|length }} controls</div>
+            </div>
+          </div>
+        </div>
+        <div class="category-stats">
+          <span><strong>{{ section_passed }}</strong> passed</span>
+          <span><strong>{{ section_failed }}</strong> failed</span>
+          <span><strong>{{ section_errors }}</strong> errors</span>
+        </div>
+        <div class="category-progress" aria-label="{{ section.title }} compliance">
+          <span style="width: {{ '%.0f'|format(section_score) }}%"></span>
+        </div>
+        <div class="category-actions">
+          {% if can_modify %}
+          <form action="{{ url_for('apply_all', category=section.key) }}" method="post" class="operation-form">
+            <button class="btn btn-secondary btn-sm" type="submit">
+              <span class="btn-label">Apply All</span>
+              <span class="spinner" aria-hidden="true"></span>
+            </button>
+          </form>
+          <form action="{{ url_for('reset_category', category=section.key) }}" method="post" class="operation-form">
+            <button class="btn btn-ghost btn-sm" type="submit" data-confirm="Reset all {{ section.title }} controls to their original default values?">
+              <span class="btn-label">Reset All</span>
+              <span class="spinner" aria-hidden="true"></span>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </section>
+      {% endfor %}
+    </div>
+
+    <footer class="app-footer">
+      <span>WinCIS-Secure · Connected Enterprise Security</span>
+      <span>CIS Windows 11 Benchmark v5.0.0</span>
+      <span>System Engine v1.0.0 | Engineered by Niranjan Krishnarajarajan | Copyright © 2026</span>
+    </footer>
+  </main>
+</div>
+
+<dialog class="confirm-dialog" id="confirm-dialog">
+  <div class="dialog-header">
+    <div class="dialog-icon-wrap danger" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div>
+      <div class="dialog-title" id="confirm-title">Confirm action</div>
+      <div class="dialog-sub">This operation will modify system security policy</div>
+    </div>
+  </div>
+  <p class="dialog-body" id="confirm-body"></p>
+  <div class="dialog-actions">
+    <button class="btn btn-secondary" id="confirm-cancel">Cancel</button>
+    <button class="btn btn-danger" id="confirm-ok">Confirm</button>
+  </div>
+</dialog>
+
+<div class="loading-overlay" aria-hidden="true" id="loading-overlay">
+  <div class="loading-ring"></div>
+  <span class="loading-text" id="loading-text">Applying security configuration...</span>
+</div>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

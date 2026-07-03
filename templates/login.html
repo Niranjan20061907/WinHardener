@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in · CIS Windows 11 Hardening · WinCIS-Secure</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='ra-favicon.svg') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <div class="login-card">
+        <div class="login-logo" aria-hidden="true">
+          <img src="{{ url_for('static', filename='win-cis.png') }}" alt="WinCIS-Secure logo">
+        </div>
+
+        <h1 class="login-title">WinCIS-Secure</h1>
+        <p class="login-sub">CIS Hardening · Windows 11 · Benchmark v5.0.0</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %} {% for
+        category, message in messages %}
+        <div class="login-alert alert-{{ category }}" role="alert">
+          {{ message }}
+        </div>
+        {% endfor %} {% endwith %}
+
+        <form method="post" class="login-form operation-form">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <button class="btn btn-primary button-wide" type="submit">
+            <span class="button-label">Sign In</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </form>
+        <div class="login-divider"><span>or</span></div>
+
+        <form action="{{ url_for('login_guest') }}" method="post" class="login-form login-guest-form">
+          <button class="btn btn-secondary button-wide" type="submit">
+            Continue as Guest
+          </button>
+        </form>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <span>WinCIS-Secure · Connected Enterprise Security</span>
+      <span>CIS Windows 11 Benchmark v5.0.0</span>
+      <span>System Engine v1.0.0 | Engineered by Niranjan Krishnarajarajan | Copyright © 2026</span>
+    </footer>
+
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+  </body>
+</html>

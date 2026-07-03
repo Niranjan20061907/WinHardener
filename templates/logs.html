@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Activity Log · CIS Windows 11 Hardening · WinCIS-Secure</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='ra-favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="logs-page">
+<div class="app-layout">
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-logo" aria-hidden="true">
+        <img src="{{ url_for('static', filename='win-cis.png') }}" alt="WinCIS-Secure logo">
+      </div>
+      <div>
+        <div class="brand-name">WinCIS-Secure</div>
+        <div class="brand-sub">CIS Windows 11 Hardening · Benchmark v5.0.0</div>
+      </div>
+    </div>
+    <div class="header-status">
+      <a class="btn btn-secondary btn-sm" href="{{ url_for('dashboard') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back to Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- ── Sidebar ────────────────────────────────────────── -->
+  <aside class="app-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <a class="sidebar-link" href="{{ url_for('dashboard') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Overview
+      </a>
+      <a class="sidebar-link" href="{{ url_for('policy_category', category='password') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+        Password Policies
+      </a>
+      <a class="sidebar-link" href="{{ url_for('policy_category', category='lockout') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+        </svg>
+        Account Lockout Policies
+      </a>
+      <a class="sidebar-link" href="{{ url_for('policy_category', category='local_policy') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M16 11h6"/>
+        </svg>
+        Local Policy
+      </a>
+      <a class="sidebar-link" href="{{ url_for('policy_category', category='services') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.7 6.3a4 4 0 00-5.66 5.66l-4.24 4.24a2 2 0 102.83 2.83l4.24-4.24a4 4 0 005.66-5.66l-2.12 2.12-2.83-2.83 2.12-2.12z"/>
+        </svg>
+        System Services
+      </a>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Audit</div>
+      <a class="sidebar-link active" href="{{ url_for('logs') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Activity Log
+      </a>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="user-avatar" aria-hidden="true">{{ username[:1]|upper }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ username }}</div>
+          <div class="user-role">{{ role }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ───────────────────────────────────────────── -->
+  <main class="app-main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Activity Log</h1>
+        <p class="page-subtitle">Audit trail of all scans, policy changes, and authentication events</p>
+      </div>
+    </div>
+
+    {% if logs %}
+    <div class="timeline">
+      {% for log in logs %}
+      {% set ts = log.timestamp %}
+      <div class="timeline-entry">
+        <div class="timeline-time">
+          <div class="time-date">{{ ts[:10] }}</div>
+          <div class="time-clock">{{ ts[11:19] }} UTC</div>
+        </div>
+
+        <div class="timeline-line" aria-hidden="true">
+          <div class="timeline-dot dot-{{ log.status }}"></div>
+          <div class="timeline-connector"></div>
+        </div>
+
+        <div class="timeline-body">
+          <div class="timeline-head">
+            <span class="log-action">{{ log.action }}</span>
+            {% if log.cis_id %}<span class="log-cis">{{ log.cis_id }}</span>{% endif %}
+            <span class="badge badge-{{ log.status }}">{{ log.status }}</span>
+          </div>
+          <p class="log-message">{{ log.message }}</p>
+          {% if log.command %}
+          <div class="log-diagnostics">
+            <code class="log-cmd">{{ log.command }}</code>
+            {% if log.stdout %}
+            <details>
+              <summary>stdout (exit {{ log.returncode if log.returncode is not none else 'N/A' }})</summary>
+              <pre>{{ log.stdout }}</pre>
+            </details>
+            {% endif %}
+            {% if log.stderr %}
+            <details>
+              <summary>stderr</summary>
+              <pre>{{ log.stderr }}</pre>
+            </details>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-timeline">No activity has been logged yet.</div>
+    {% endif %}
+
+    <footer class="app-footer">
+      <span>WinCIS-Secure · Connected Enterprise Security</span>
+      <span>CIS Windows 11 Benchmark v5.0.0</span>
+      <span>System Engine v1.0.0 | Engineered by Niranjan Krishnarajarajan | Copyright © 2026</span>
+    </footer>
+  </main>
+</div>
+</body>
+</html>

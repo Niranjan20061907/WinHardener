@@ -1,0 +1,13 @@
+build/
+dist/
+__pycache__/
+*.pyc
+data/
+*.spec
+.DS_Store
+*.exe
+*.tmp
+*.log
+# Virtual Environments
+venv/
+env/
