@@ -2,7 +2,7 @@
 
 > **Automated endpoint compliance scanner and remediation dashboard — mapped directly to the CIS Microsoft Windows 11 Stand-alone Benchmark v5.0.0**
 
-Built during an OT Security internship at **WinCIS-Secure** as part of Connected Enterprise Security initiatives. Designed for securing air-gapped systems, Operational Technology (OT) networks, and standalone industrial endpoints where manual auditing is slow, error-prone, and unscalable.
+Built during an OT Security internship at **ROCKWELL AUTOMATION**. Designed for securing air-gapped systems, Operational Technology (OT) networks, and standalone industrial endpoints where manual auditing is slow, error-prone, and unscalable.
 
 ---
 
@@ -68,7 +68,7 @@ System-Hardening/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Niranjan20061907/System-Hardening.git
+git clone https://github.com/Niranjan20061907/WinHardener.git
 cd System-Hardening
 
 # 2. Install dependencies
@@ -93,10 +93,10 @@ Sign in as **admin** to apply and reset policies, or **Continue as Guest** for r
 
 | Category | Controls | What It Checks |
 | --- | --- | --- |
-| **Password Policies** | 7 | Length, history, age, complexity, reversible encryption[cite: 1] |
-| **Account Lockout Policies** | 4 | Lockout threshold, duration, observation window, administrator lockout[cite: 1] |
-| **Local Policy** | 2 | User rights assignment (Allow log on locally, Back up files and directories)[cite: 1] |
-| **System Services** | 44 | Service startup state for 44 Windows services per CIS guidance[cite: 1] |
+| **Password Policies** | 7 | Length, history, age, complexity, reversible encryption |
+| **Account Lockout Policies** | 4 | Lockout threshold, duration, observation window, administrator lockout |
+| **Local Policy** | 2 | User rights assignment (Allow log on locally, Back up files and directories) |
+| **System Services** | 44 | Service startup state for 44 Windows services per CIS guidance |
 | **Total** | **57** |  |
 
 
