@@ -1,75 +1,114 @@
-# 🛡️ CIS Windows 11 Hardening Tool
+<div align="center">
 
-> **Automated endpoint compliance scanner and remediation dashboard — mapped directly to the CIS Microsoft Windows 11 Stand-alone Benchmark v5.0.0**
+# 🛡️ WinHardener
 
-Built during an OT Security internship at **ROCKWELL AUTOMATION**. Designed for securing air-gapped systems, Operational Technology (OT) networks, and standalone industrial endpoints where manual auditing is slow, error-prone, and unscalable.
+### Automated CIS Compliance & Hardening for Windows 11 — Built for Air-Gapped & OT Environments
 
----
+<p>
+  <img src="https://img.shields.io/badge/CIS_Benchmark-v5.0.0-2ea44f?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Controls-57-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Remediation-%3C10s-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Air--Gapped-Yes-critical?style=for-the-badge" />
+</p>
 
-## 📸 Screenshots
+<p>
+  <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/Flask-000000?style=flat-square&logo=flask&logoColor=white" />
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" />
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" />
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" />
+  <img src="https://img.shields.io/badge/Windows_11-0078D6?style=flat-square&logo=windows&logoColor=white" />
+</p>
 
-### Login — Role-Based Access Control
-![Login Page](docs/screenshots/login.PNG)
-*Supports admin and guest roles. Admin can apply and reset policies; guest can audit and export only.*
+*Built during an OT Security & Industrial Networking internship at **Rockwell Automation***
 
-### System Hardening Dashboard
-![Dashboard](docs/screenshots/dashboard.PNG)
-*Real-time compliance score across 57 Windows security checks. One-click Apply All or Reset All per policy category. PDF export for audit reports.*
+[Overview](#-overview) • [Features](#-features) • [Screenshots](#-screenshots) • [Architecture](#️-architecture) • [Getting Started](#-getting-started) • [Compliance Coverage](#-what-gets-audited) • [Roadmap](#️-roadmap)
 
----
+</div>
+
+<br />
+
+## 📖 Overview
+
+Manually auditing a Windows endpoint against a CIS Benchmark is slow, repetitive, and easy to get wrong — and in **OT/ICS environments**, where HMIs, historians, and engineering workstations are often standalone and air-gapped, that manual process doesn't scale at all.
+
+**WinHardener** is a self-contained Flask application that scans a Windows 11 machine against **57 controls from the CIS Microsoft Windows 11 Stand-alone Benchmark v5.0.0**, shows a live compliance score, and remediates failing controls — individually or in bulk — in under 10 seconds. No internet connection, external services, or CDNs required at runtime, so it runs cleanly inside isolated industrial networks.
+
+<br />
 
 ## ✨ Features
 
-- **57 CIS Controls** across Password Policies, Account Lockout Policies, and System Services
-- **Live compliance score** — tracks how many controls pass vs. fail vs. error at a glance
-- **One-click remediation** — Apply All or Reset All per category, or individually per control
-- **PDF export** — generate a full compliance report for audit trails and stakeholder reporting
-- **Role-based access** — Admin (full remediation) and Guest (read-only audit) modes
-- **Activity Log** — tracks every policy change with timestamp for accountability
-- **Air-gap friendly** — runs entirely locally over Flask, no external dependencies at runtime
-- **CIS Benchmark v5.0.0 aligned** — every control maps to a specific CIS recommendation ID
+| | |
+|---|---|
+| 📊 **Live Compliance Score** | Real-time pass/fail/error breakdown across all 57 controls |
+| ⚡ **One-Click Remediation** | Apply All / Reset All per category, or act on a single control |
+| 🔐 **Role-Based Access** | Admin (full read/write) vs. Guest (read-only audit) |
+| 📄 **PDF Compliance Reports** | Exportable audit trail with CIS ID, required vs. current value, and pass/fail status |
+| 🧾 **Activity Logging** | Every policy change is timestamped and recorded to JSON |
+| 🔌 **Air-Gap Ready** | Zero external dependencies at runtime — safe for isolated OT/SCADA networks |
+| 🎯 **Benchmark-Traceable** | Every control maps to a specific CIS v5.0.0 recommendation ID |
 
----
+<br />
+
+## 📸 Screenshots
+
+**Login — Role-Based Access Control**
+<br />
+<img src="https://github.com/Niranjan20061907/WinHardener/raw/main/docs/screenshots/login.PNG" width="700" alt="Login page with admin and guest roles" />
+
+*Admins can apply and reset policies; guests get read-only audit and export access.*
+
+**System Hardening Dashboard**
+<br />
+<img src="https://github.com/Niranjan20061907/WinHardener/raw/main/docs/screenshots/dashboard.PNG" width="700" alt="Dashboard showing live compliance score" />
+
+*Live compliance score across all 57 controls, with one-click Apply/Reset per category and PDF export.*
+
+**Compliance Report (PDF Export)**
+<br />
+<img src="https://github.com/Niranjan20061907/WinHardener/raw/main/docs/screenshots/report.PNG" width="700" alt="Exported PDF compliance report" />
+
+*Paginated audit report with an executive summary and a full control-by-control breakdown — built for tracking compliance progress and sharing with stakeholders.*
+
+<br />
 
 ## 🏗️ Architecture
 
 ```
-System-Hardening/
+WinHardener/
 ├── app.py                  # Flask application, routing, and access control
 ├── policies.py             # CIS Benchmark schema, target values, and thresholds
-├── policy_executor.py      # Core engine: translates Python rules to Windows OS commands
+├── policy_executor.py      # Core engine — maps Python rules to Windows OS commands
 ├── requirements.txt        # Python dependencies
-├── data/                   # Isolated storage for scan results and audit logs
+├── data/                   # Local storage for scan results and audit logs
 │   ├── activity_log.json
 │   └── custom_values.json
 ├── static/                 # Frontend assets
-│   ├── style.css           
-│   └── dashboard.js        
+│   ├── style.css
+│   └── dashboard.js
 └── templates/              # HTML templates
     ├── dashboard.html
     ├── logs.html
     └── login.html
-
 ```
 
-**Stack:** Python · Flask · HTML/CSS · JavaScript · Windows Registry API (`winreg`) · `subprocess` (secedit/sc)
+**Under the hood:** policy state is read and written via `subprocess` calls to `secedit`, `reg.exe`, and `sc.exe`, with direct Windows Registry access through `winreg` — no third-party Windows automation libraries, keeping the tool dependency-free and safe to run on locked-down endpoints.
 
----
+<br />
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
-- Windows 11 (required — reads Windows Registry and Group Policy)
+- Windows 11 (required — reads the Windows Registry and Local/Group Policy)
 - Python 3.10+
-- Run as **Administrator** (required for registry writes and policy application)
+- Administrator privileges (required for registry writes and policy application)
 
 ### Installation
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Niranjan20061907/WinHardener.git
-cd System-Hardening
+cd WinHardener
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -78,90 +117,79 @@ pip install -r requirements.txt
 python app.py
 ```
 
-### Access the dashboard
+### Access the Dashboard
 
 Open your browser and navigate to:
+
 ```
 http://127.0.0.1:5000
 ```
 
-Sign in as **admin** to apply and reset policies, or **Continue as Guest** for read-only audit access.
+Sign in as **admin** for full audit + remediation access, or **Continue as Guest** for read-only auditing.
 
----
+<br />
 
 ## 🔍 What Gets Audited
 
 | Category | Controls | What It Checks |
-| --- | --- | --- |
-| **Password Policies** | 7 | Length, history, age, complexity, reversible encryption |
-| **Account Lockout Policies** | 4 | Lockout threshold, duration, observation window, administrator lockout |
-| **Local Policy** | 2 | User rights assignment (Allow log on locally, Back up files and directories) |
-| **System Services** | 44 | Service startup state for 44 Windows services per CIS guidance |
-| **Total** | **57** |  |
+|---|:---:|---|
+| **Password Policies** | 7 | Length, history, max/min age, complexity, reversible encryption |
+| **Account Lockout Policies** | 4 | Lockout threshold, duration, observation window, admin lockout |
+| **Local Policy** | 2 | User rights assignment (log on locally, back up files/directories) |
+| **System Services** | 44 | Startup state for 44 Windows services per CIS guidance |
+| **Total** | **57** | |
 
+Each control resolves to one of three states:
 
-Each control reports:
-- ✅ **PASS** — current setting meets CIS requirement
-- ❌ **FAIL** — current setting does not meet CIS requirement (remediation available)
-- ⚠️ **ERROR** — setting could not be read (permissions or OS edition issue)
+- ✅ **PASS** — meets the CIS requirement
+- ❌ **FAIL** — does not meet the requirement (remediation available)
+- ⚠️ **ERROR** — could not be read (permissions or OS edition mismatch)
 
----
+<br />
 
-## 📊 Compliance Report (PDF Export)
-![PDF_REPORT](docs/screenshots/report.PNG)
-Click **EXPORT PDF REPORT** on the dashboard to download a formatted, paginated audit report. The report contains an executive summary of the overall score followed by a tabular breakdown of:
+## 🏭 Why This Matters for OT/ICS
 
-* **CIS ID & Policy Name**
-* **Required Value vs. Current Value**
-* **Pass/Fail Status**
+Most Windows hardening tools assume an internet-connected, domain-joined machine. WinHardener is built for the opposite case:
 
-Use this for audit documentation, tracking compliance score improvements (e.g., advancing from 30% to 100% compliant), and sharing with engineering stakeholders.
+- **Air-gap compatible** — no internet, no cloud dependencies, no telemetry
+- **Standalone-endpoint focus** — targets HMI/SCADA workstations, historian nodes, and engineering stations
+- **Non-disruptive auditing** — guest mode scans without changing anything
+- **Operator-controlled remediation** — Apply/Reset actions are explicit and per-category, never automatic
 
----
+<br />
 
-## 🏭 OT / ICS Relevance
+## 📋 Benchmark Reference
 
-Traditional IT hardening tools assume internet-connected, domain-joined systems. This tool is designed for the realities of **Operational Technology environments**:
+This tool implements controls from the **CIS Microsoft Windows 11 Stand-alone Benchmark, Version 5.0.0** (Center for Internet Security — [cisecurity.org](https://www.cisecurity.org)). Every control in `policies.py` references its exact CIS recommendation ID (e.g. `1.1.1`, `2.3.1`) for full traceability.
 
-- **Air-gap compatible** — no internet required, no cloud dependencies
-- **Standalone endpoint focus** — targets Windows 11 HMI/SCADA workstations, historian nodes, and engineering stations
-- **Non-disruptive audit** — read-only guest mode lets you scan without changing anything
-- **Remediation control** — Apply and Reset are explicit, per-category actions, not automatic, giving operators full control
-
----
-
-## 📋 CIS Benchmark Reference
-
-This tool implements controls from:
-
-> **CIS Microsoft Windows 11 Stand-alone Benchmark, Version 5.0.0**
-> Center for Internet Security — [https://www.cisecurity.org](https://www.cisecurity.org)
-
-Each control in `policies.py` references the exact CIS recommendation ID (e.g., `1.1.1`, `2.3.1`) for traceability.
-
----
+<br />
 
 ## 🗺️ Roadmap
 
 - [ ] Audit Policy controls (Event Log, Windows Audit settings)
-- [ ] SMBv1 / NetBIOS detection (critical for OT — WannaCry attack surface)
-- [ ] Scheduled automatic scans with email/webhook alerts
-- [ ] Scan history and compliance trend chart
-- [ ] Docker support for deployment on Windows Server
+- [ ] SMBv1 / NetBIOS detection — closes a key OT attack surface (e.g. WannaCry-class exploits)
+- [ ] Scheduled scans with email/webhook alerting
+- [ ] Scan history and compliance trend charting
+- [ ] Docker support for Windows Server deployments
 
----
+<br />
 
 ## 👤 Author
 
 **Niranjan Krishnarajarajan**
-B.Tech Computer Science, NIT Rourkela (2nd Year)
+B.Tech Computer Science, NIT Rourkela
+[LinkedIn](https://www.linkedin.com/in/niranjan-krishnarajarajan-768625332/) · [GitHub](https://github.com/Niranjan20061907)
 
----
+<br />
 
 ## ⚖️ Disclaimer
 
-This tool modifies Windows Registry and Group Policy settings. Always test in a non-production environment before applying to operational systems. The author and Rockwell Automation are not responsible for system instability caused by applying CIS hardening controls to production OT endpoints.
+This tool modifies Windows Registry and Group/Local Policy settings. Always test in a non-production environment before applying to operational systems. The author and Rockwell Automation are not responsible for system instability resulting from applying CIS hardening controls to production OT endpoints.
 
----
+<br />
+
+<div align="center">
 
 *CIS Windows 11 Benchmark v5.0.0 · © 2026 Niranjan Krishnarajarajan*
+
+</div>
