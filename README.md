@@ -94,6 +94,14 @@ WinHardener/
 
 **Under the hood:** policy state is read and written via `subprocess` calls to `secedit`, `reg.exe`, and `sc.exe`, with direct Windows Registry access through `winreg` — no third-party Windows automation libraries, keeping the tool dependency-free and safe to run on locked-down endpoints.
 
+![WinHardener architecture](docs/architecture.svg)
+
+Policy definitions live in `policies.py` and are never hardcoded into the executor.
+Scan results in `data/` feed both the live dashboard and the PDF export — so exported
+reports always match what's shown on screen, generated on demand rather than cached.
+
+
+
 <br />
 
 ## 🚀 Getting Started
